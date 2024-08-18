@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Transaktionen</title>
+    <link rel="stylesheet" href="/static/bootstrap-5.3.3-dist/css/bootstrap.min.css">
+    <script src="/static/bootstrap-5.3.3-dist/js/bootstrap.min.js"></script>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Transaktionen</h1>
+        <form method="POST" class="mb-3">
+            <div class="row">
+                <div class="col">
+                    <select name="category" class="form-select">
+                        <option value="">Kategorie wählen</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col">
+                    <select name="user" class="form-select">
+                        <option value="">Nutzer wählen</option>
+                        {% for user in users %}
+                        <option value="{{ user.id }}">{{ user.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col">
+                    <input type="date" name="date" class="form-control" placeholder="Datum wählen">
+                </div>
+                <div class="col">
+                    <button type="submit" class="btn btn-secondary">Filtern</button>
+                </div>
+            </div>
+        </form>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Datum</th>
+                    <th>Nutzer</th>
+                    <th>Kategorie</th>
+                    <th>Beschreibung</th>
+                    <th>Betrag</th>
+                    <th>Bezahlt</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for transaction in transactions %}
+                <tr>
+                    <td>{{ transaction.date }}</td>
+                    <td>{{ transaction.user }}</td>
+                    <td>{{ transaction.category }}</td>
+                    <td>{{ transaction.description }}</td>
+                    <td>{{ transaction.amount }}</td>
+                    <td>{{ 'Ja' if transaction.payed else 'Nein' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <a href="{{ url_for('add_transaction') }}" class="btn btn-success mt-3">Neue Transaktion hinzufügen</a>
+    </div>
+</body>
+</html>

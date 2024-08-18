@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
-import os
+from datetime import datetime
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.db'
@@ -33,7 +33,10 @@ def index():
     categories = Category.query.all()
     users = User.query.all()
 
-    transactions = Transaction.query
+    transactions = Transaction.query.join(User).join(Category).add_columns(
+        User.username.label('user_username'),
+        Category.name.label('category_name')
+    )
 
     if request.method == 'POST':
         selected_category = request.form.get('category')
@@ -41,16 +44,27 @@ def index():
         selected_date = request.form.get('date')
 
         if selected_category:
-            transactions = transactions.filter_by(category_id=selected_category)
+            transactions = transactions.filter(Transaction.category_id == selected_category)
         if selected_user:
-            transactions = transactions.filter_by(created_by=selected_user)
+            transactions = transactions.filter(Transaction.created_by == selected_user)
         if selected_date:
             date_obj = datetime.strptime(selected_date, '%Y-%m-%d').date()
-            transactions = transactions.filter_by(date=date_obj)
+            transactions = transactions.filter(Transaction.date == date_obj)
 
     transactions = transactions.all()
 
-    return render_template('index.html', transactions=transactions, categories=categories, users=users)
+    transaction_list = []
+    for transaction in transactions:
+        transaction_list.append({
+            'date': transaction.date,
+            'user': transaction.user_username,
+            'category': transaction.category_name,
+            'description': transaction.description,
+            'amount': transaction.amount,
+            'payed': transaction.payed
+        })
+
+    return render_template('index.html', transactions=transaction_list, categories=categories, users=users)
 
 
 @app.route('/add', methods=['GET', 'POST'])
@@ -59,21 +73,42 @@ def add_transaction():
     users = User.query.all()
 
     if request.method == 'POST':
-        category_id = request.form['category']
-        user_id = request.form['user']
-        description = request.form['description']
-        amount = request.form['amount']
-        date_value = request.form['date']
+        category_id = request.form.get('category')
+        user_id = request.form.get('user')
+        description = request.form.get('description')
+        amount = request.form.get('amount')
+        date_value = request.form.get('date')
         payed = 'payed' in request.form
 
-        transaction = Transaction(category_id=category_id, created_by=user_id, description=description,
-                                  amount=amount, date=date_value, payed=payed)
+        date_obj = datetime.strptime(date_value, '%Y-%m-%d').date()
+        transaction = Transaction(
+            category_id=category_id, created_by=user_id, description=description,
+            amount=amount, date=date_obj, payed=payed
+        )
         db.session.add(transaction)
         db.session.commit()
 
         return redirect(url_for('index'))
 
     return render_template('add_transaction.html', categories=categories, users=users)
+
+
+@app.route('/add_user', methods=['POST'])
+def add_user():
+    username = request.form.get('username')
+    user = User(username=username)
+    db.session.add(user)
+    db.session.commit()
+    return redirect(url_for('add_transaction'))
+
+
+@app.route('/add_category', methods=['POST'])
+def add_category():
+    name = request.form.get('name')
+    category = Category(name=name)
+    db.session.add(category)
+    db.session.commit()
+    return redirect(url_for('add_transaction'))
 
 
 if __name__ == '__main__':
