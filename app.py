@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
@@ -11,6 +11,7 @@ db = SQLAlchemy(app)
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
+    budget = db.Column(db.Float, nullable=False, default=0.0)
 
 
 class User(db.Model):
@@ -32,8 +33,9 @@ class Transaction(db.Model):
 def index():
     categories = Category.query.all()
     users = User.query.all()
+    page = request.args.get('page', 1, type=int)
 
-    transactions = Transaction.query.join(User).join(Category).add_columns(
+    transactions_query = Transaction.query.join(User).join(Category).add_columns(
         Transaction.id,
         Transaction.date,
         Transaction.description,
@@ -49,17 +51,17 @@ def index():
         selected_date = request.form.get('date')
 
         if selected_category:
-            transactions = transactions.filter(Transaction.category_id == selected_category)
+            transactions_query = transactions_query.filter(Transaction.category_id == selected_category)
         if selected_user:
-            transactions = transactions.filter(Transaction.created_by == selected_user)
+            transactions_query = transactions_query.filter(Transaction.created_by == selected_user)
         if selected_date:
             date_obj = datetime.strptime(selected_date, '%Y-%m-%d').date()
-            transactions = transactions.filter(Transaction.date == date_obj)
+            transactions_query = transactions_query.filter(Transaction.date == date_obj)
 
-    transactions = transactions.all()
+    pagination = transactions_query.paginate(page=page, per_page=25)
 
     transaction_list = []
-    for transaction in transactions:
+    for transaction in pagination.items:
         transaction_list.append({
             'id': transaction.id,
             'date': transaction.date,
@@ -74,7 +76,29 @@ def index():
         'index.html',
         transactions=transaction_list,
         categories=categories,
-        users=users
+        users=users,
+        pagination=pagination
+    )
+
+
+@app.route('/category/<int:category_id>', methods=['GET', 'POST'])
+def category_budget(category_id):
+    category = Category.query.get_or_404(category_id)
+    transactions = Transaction.query.filter_by(category_id=category_id).all()
+
+    total_spent = sum(t.amount for t in transactions)
+    remaining_budget = category.budget - total_spent
+
+    if request.method == 'POST':
+        additional_budget = float(request.form.get('additional_budget', 0))
+        category.budget += additional_budget
+        db.session.commit()
+        return redirect(url_for('category_budget', category_id=category_id))
+
+    return render_template(
+        'category_budget.html',
+        category=category,
+        remaining_budget=remaining_budget
     )
 
 
@@ -145,7 +169,7 @@ def totals():
                 totals[transaction.user_username]['paid'] += transaction.amount
             results = [{'user': k, 'paid': v['paid']} for k, v in totals.items()]
         elif filter_subtype == 'unpaid':
-            transactions = Transaction.query.filter_by(payed=False).join(User).add_columns(
+            transactions = Transaction.query.filter_by(payed(False)).join(User).add_columns(
                 User.username.label('user_username'),
                 Transaction.amount
             ).all()
@@ -227,7 +251,8 @@ def add_user():
 @app.route('/add_category', methods=['POST'])
 def add_category():
     name = request.form.get('name')
-    category = Category(name=name)
+    budget = float(request.form.get('budget', 0))
+    category = Category(name=name, budget=budget)
     db.session.add(category)
     db.session.commit()
     return redirect(url_for('add_transaction'))

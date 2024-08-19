@@ -10,6 +10,7 @@ db = SQLAlchemy(app)
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
+    budget = db.Column(db.Float, nullable=False, default=0.0)
 
 
 class User(db.Model):
