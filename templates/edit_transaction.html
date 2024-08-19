@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Transaktion bearbeiten</title>
+    <link rel="stylesheet" href="/static/bootstrap-5.3.3-dist/css/bootstrap.min.css">
+    <script src="/static/bootstrap-5.3.3-dist/js/bootstrap.min.js"></script>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Transaktion bearbeiten</h1>
+        <form method="POST">
+            <div class="mb-3">
+                <label for="category" class="form-label">Kategorie</label>
+                <select name="category" id="category" class="form-select" required>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}" {% if category.id == transaction.category_id %}selected{% endif %}>{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="user" class="form-label">Nutzer</label>
+                <select name="user" id="user" class="form-select" required>
+                    {% for user in users %}
+                    <option value="{{ user.id }}" {% if user.id == transaction.created_by %}selected{% endif %}>{{ user.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="description" class="form-label">Beschreibung</label>
+                <input type="text" class="form-control" id="description" name="description" value="{{ transaction.description }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="amount" class="form-label">Betrag</label>
+                <input type="number" step="0.01" class="form-control" id="amount" name="amount" value="{{ transaction.amount }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="date" class="form-label">Datum</label>
+                <input type="date" class="form-control" id="date" name="date" value="{{ transaction.date }}" required>
+            </div>
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="payed" name="payed" {% if transaction.payed %}checked{% endif %}>
+                <label class="form-check-label" for="payed">Bezahlt</label>
+            </div>
+            <button type="submit" class="btn btn-primary">Speichern</button>
+        </form>
+    </div>
+</body>
+</html>

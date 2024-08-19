@@ -34,6 +34,11 @@ def index():
     users = User.query.all()
 
     transactions = Transaction.query.join(User).join(Category).add_columns(
+        Transaction.id,
+        Transaction.date,
+        Transaction.description,
+        Transaction.amount,
+        Transaction.payed,
         User.username.label('user_username'),
         Category.name.label('category_name')
     )
@@ -56,6 +61,7 @@ def index():
     transaction_list = []
     for transaction in transactions:
         transaction_list.append({
+            'id': transaction.id,
             'date': transaction.date,
             'user': transaction.user_username,
             'category': transaction.category_name,
@@ -91,6 +97,27 @@ def add_transaction():
         return redirect(url_for('index'))
 
     return render_template('add_transaction.html', categories=categories, users=users)
+
+
+@app.route('/edit/<int:transaction_id>', methods=['GET', 'POST'])
+def edit_transaction(transaction_id):
+    transaction = Transaction.query.get_or_404(transaction_id)
+    categories = Category.query.all()
+    users = User.query.all()
+
+    if request.method == 'POST':
+        transaction.category_id = request.form.get('category')
+        transaction.created_by = request.form.get('user')
+        transaction.description = request.form.get('description')
+        transaction.amount = request.form.get('amount')
+        date_value = request.form.get('date')
+        transaction.date = datetime.strptime(date_value, '%Y-%m-%d').date()
+        transaction.payed = 'payed' in request.form
+
+        db.session.commit()
+        return redirect(url_for('index'))
+
+    return render_template('edit_transaction.html', transaction=transaction, categories=categories, users=users)
 
 
 @app.route('/add_user', methods=['POST'])
