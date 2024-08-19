@@ -5,37 +5,40 @@
     <title>Transaktionen</title>
     <link rel="stylesheet" href="/static/bootstrap-5.3.3-dist/css/bootstrap.min.css">
     <script src="/static/bootstrap-5.3.3-dist/js/bootstrap.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-    <div class="container mt-5">
-        <h1 class="mb-4">Transaktionen</h1>
+    <div class="container">
+        <h1 class="mt-5">Transaktionen</h1>
         <form method="POST" class="mb-3">
             <div class="row">
-                <div class="col">
-                    <select name="category" class="form-select">
-                        <option value="">Kategorie wählen</option>
+                <div class="col-md-4">
+                    <label for="category" class="form-label">Kategorie</label>
+                    <select name="category" id="category" class="form-select">
+                        <option value="">Alle</option>
                         {% for category in categories %}
                         <option value="{{ category.id }}">{{ category.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col">
-                    <select name="user" class="form-select">
-                        <option value="">Nutzer wählen</option>
+                <div class="col-md-4">
+                    <label for="user" class="form-label">Nutzer</label>
+                    <select name="user" id="user" class="form-select">
+                        <option value="">Alle</option>
                         {% for user in users %}
                         <option value="{{ user.id }}">{{ user.username }}</option>
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col">
-                    <input type="date" name="date" class="form-control" placeholder="Datum wählen">
-                </div>
-                <div class="col">
-                    <button type="submit" class="btn btn-secondary">Filtern</button>
+                <div class="col-md-4">
+                    <label for="date" class="form-label">Datum</label>
+                    <input type="date" name="date" id="date" class="form-control">
                 </div>
             </div>
+            <button type="submit" class="btn btn-primary mt-3">Suche</button>
         </form>
-        <table class="table table-striped">
+
+        <table class="table table-bordered">
             <thead>
                 <tr>
                     <th>Datum</th>
@@ -64,6 +67,7 @@
             </tbody>
         </table>
         <a href="{{ url_for('add_transaction') }}" class="btn btn-success mt-3">Neue Transaktion hinzufügen</a>
+        <a href="{{ url_for('totals') }}" class="btn btn-info mt-3">Gesamtbeträge anzeigen</a>
     </div>
 </body>
 </html>

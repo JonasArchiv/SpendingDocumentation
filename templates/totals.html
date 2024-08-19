@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+</body>
+</html><!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Gesamtbeträge</title>
+    <link rel="stylesheet" href="/static/bootstrap-5.3.3-dist/css/bootstrap.min.css">
+    <script src="/static/bootstrap-5.3.3-dist/js/bootstrap.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">Gesamtbeträge</h1>
+        <form method="POST" class="mb-3">
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="filter_type" class="form-label">Filter Typ</label>
+                    <select name="filter_type" id="filter_type" class="form-select">
+                        <option value="user" {% if filter_type == 'user' %}selected{% endif %}>Nutzer</option>
+                        <option value="category" {% if filter_type == 'category' %}selected{% endif %}>Kategorie</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="filter_subtype" class="form-label">Filter Untertyp</label>
+                    <select name="filter_subtype" id="filter_subtype" class="form-select">
+                        <option value="total" {% if filter_subtype == 'total' %}selected{% endif %}>Gesamt</option>
+                        <option value="paid" {% if filter_subtype == 'paid' %}selected{% endif %}>Bezahlt</option>
+                        <option value="unpaid" {% if filter_subtype == 'unpaid' %}selected{% endif %}>Unbezahlt</option>
+                    </select>
+                </div>
+                <div class="col-md-4 mt-4">
+                    <button type="submit" class="btn btn-primary">Suche</button>
+                </div>
+            </div>
+        </form>
+
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    {% if filter_type == 'category' %}
+                        <th>Kategorie</th>
+                    {% elif filter_type == 'user' %}
+                        <th>Nutzer</th>
+                    {% endif %}
+                    {% if filter_subtype == 'total' %}
+                        <th>Gesamtbetrag</th>
+                    {% elif filter_subtype == 'paid' %}
+                        <th>Bezahlt</th>
+                    {% elif filter_subtype == 'unpaid' %}
+                        <th>Unbezahlt</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in results %}
+                    <tr>
+                        {% if filter_type == 'category' %}
+                            <td>{{ result.category }}</td>
+                        {% elif filter_type == 'user' %}
+                            <td>{{ result.user }}</td>
+                        {% endif %}
+                        {% if filter_subtype == 'total' %}
+                            <td>{{ result.total }}</td>
+                        {% elif filter_subtype == 'paid' %}
+                            <td>{{ result.paid }}</td>
+                        {% elif filter_subtype == 'unpaid' %}
+                            <td>{{ result.unpaid }}</td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary mt-3">Zurück zur Hauptseite</a>
+    </div>
+</body>
+</html>

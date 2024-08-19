@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
@@ -70,7 +70,102 @@ def index():
             'payed': transaction.payed
         })
 
-    return render_template('index.html', transactions=transaction_list, categories=categories, users=users)
+    return render_template(
+        'index.html',
+        transactions=transaction_list,
+        categories=categories,
+        users=users
+    )
+
+
+@app.route('/totals', methods=['GET', 'POST'])
+def totals():
+    categories = Category.query.all()
+    users = User.query.all()
+    filter_type = request.form.get('filter_type', 'user')
+    filter_subtype = request.form.get('filter_subtype')
+
+    if filter_type == 'category':
+        if filter_subtype == 'total':
+            transactions = Transaction.query.join(Category).add_columns(
+                Category.name.label('category_name'),
+                Transaction.amount
+            ).all()
+            totals = {}
+            for transaction in transactions:
+                if transaction.category_name not in totals:
+                    totals[transaction.category_name] = {'total': 0}
+                totals[transaction.category_name]['total'] += transaction.amount
+            results = [{'category': k, 'total': v['total']} for k, v in totals.items()]
+        elif filter_subtype == 'paid':
+            transactions = Transaction.query.filter_by(payed=True).join(Category).add_columns(
+                Category.name.label('category_name'),
+                Transaction.amount
+            ).all()
+            totals = {}
+            for transaction in transactions:
+                if transaction.category_name not in totals:
+                    totals[transaction.category_name] = {'paid': 0}
+                totals[transaction.category_name]['paid'] += transaction.amount
+            results = [{'category': k, 'paid': v['paid']} for k, v in totals.items()]
+        elif filter_subtype == 'unpaid':
+            transactions = Transaction.query.filter_by(payed=False).join(Category).add_columns(
+                Category.name.label('category_name'),
+                Transaction.amount
+            ).all()
+            totals = {}
+            for transaction in transactions:
+                if transaction.category_name not in totals:
+                    totals[transaction.category_name] = {'unpaid': 0}
+                totals[transaction.category_name]['unpaid'] += transaction.amount
+            results = [{'category': k, 'unpaid': v['unpaid']} for k, v in totals.items()]
+        else:
+            results = []
+    elif filter_type == 'user':
+        if filter_subtype == 'total':
+            transactions = Transaction.query.join(User).add_columns(
+                User.username.label('user_username'),
+                Transaction.amount
+            ).all()
+            totals = {}
+            for transaction in transactions:
+                if transaction.user_username not in totals:
+                    totals[transaction.user_username] = {'total': 0}
+                totals[transaction.user_username]['total'] += transaction.amount
+            results = [{'user': k, 'total': v['total']} for k, v in totals.items()]
+        elif filter_subtype == 'paid':
+            transactions = Transaction.query.filter_by(payed=True).join(User).add_columns(
+                User.username.label('user_username'),
+                Transaction.amount
+            ).all()
+            totals = {}
+            for transaction in transactions:
+                if transaction.user_username not in totals:
+                    totals[transaction.user_username] = {'paid': 0}
+                totals[transaction.user_username]['paid'] += transaction.amount
+            results = [{'user': k, 'paid': v['paid']} for k, v in totals.items()]
+        elif filter_subtype == 'unpaid':
+            transactions = Transaction.query.filter_by(payed=False).join(User).add_columns(
+                User.username.label('user_username'),
+                Transaction.amount
+            ).all()
+            totals = {}
+            for transaction in transactions:
+                if transaction.user_username not in totals:
+                    totals[transaction.user_username] = {'unpaid': 0}
+                totals[transaction.user_username]['unpaid'] += transaction.amount
+            results = [{'user': k, 'unpaid': v['unpaid']} for k, v in totals.items()]
+        else:
+            results = []
+
+    return render_template(
+        'totals.html',
+        categories=categories,
+        users=users,
+        results=results,
+        filter_type=filter_type,
+        filter_subtype=filter_subtype
+    )
 
 
 @app.route('/add', methods=['GET', 'POST'])

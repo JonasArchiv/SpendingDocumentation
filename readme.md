@@ -13,9 +13,10 @@
 
 ## Features add in the future:
 - [X] Edit Transaction
+- [ ] Sites on all transactions
 - [ ] Setup budget pots
 - [ ] manage the budget pots
-- [ ] see the total amount spent by category, user and total
+- [X] see the total amount spent by category, user and total
 
 ## Preview:
 ### Main Page
@@ -23,5 +24,9 @@ With out transactions
 <img src="picts/mainpage.png"> <br>
 With transactions
 <img src="picts/list_test.png"> <br>
+
 ### Add Transaction
 <img src="picts/addTransaktion.png"> <br>
+
+### Edit Transaction
+<img src="picts/Edit_example1.png"> <br>
